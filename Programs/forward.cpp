@@ -26,14 +26,63 @@ void coutArray(vector<int> array)
 {
     for (int x : array)
     {
-        cout << x << "\t";
+        cout << " " << x;
     }
-    cout << "\n";
 }
 
-vector<int> lookForBestRule(int goal)
+bool contains(vector<int> array, int value)
 {
-    vector<vector<int>> matchedRules;
+    return find(array.begin(), array.end(), value) != array.end();
+}
+
+vector<int> getUnknownRequirements(vector<int> requirements)
+{
+    vector<int> unknownRequirements = {};
+    for (int requirement : requirements)
+    {
+        if (!contains(facts, requirement))
+            unknownRequirements.push_back(requirement);
+    }
+    return unknownRequirements;
+}
+
+//Main functions
+pair<vector<int>, int> lookForBestForwardRule(int condition)
+{
+    vector<pair<vector<int>, int>> matchedRules = {};
+    int bestIndex = 0;
+    int unknownFacts = INT_MAX;
+    for (pair<vector<int>, int> rule : knowledgeBase)
+    {
+        if (contains(rule.first, condition))
+            matchedRules.push_back(rule);
+    }
+
+    for (int i = 0; i < matchedRules.size(); i++)
+    {
+        vector<int> requirements = matchedRules[i].first;
+        int actualUnknownFacts = 0;
+
+        actualUnknownFacts = getUnknownRequirements(requirements).size();
+
+        if (actualUnknownFacts < unknownFacts)
+        {
+            swap(actualUnknownFacts, unknownFacts);
+            bestIndex = i;
+        }
+    }
+
+    if (matchedRules.size() > 0)
+    {
+        return matchedRules[bestIndex];
+    }
+
+    return pair<vector<int>, int>{{}, 0};
+}
+
+vector<int> lookForBestBackwardRule(int goal)
+{
+    vector<vector<int>> matchedRules = {};
     int bestIndex = 0;
     int knownFacts = 0;
 
@@ -43,19 +92,13 @@ vector<int> lookForBestRule(int goal)
             matchedRules.push_back(fact.first);
     }
 
-    //Just in case the user prompted a non-valid goal
-    if (matchedRules.size() == 0)
-    {
-        throw "Goal must be searchable in knowledge base";
-    }
-
     for (int i = 0; i < matchedRules.size(); i++)
     {
         vector<int> requirements = matchedRules[i];
         int actualKnownFacts = 0;
         for (int requirement : requirements)
         {
-            if (find(facts.begin(), facts.end(), requirement) != facts.end())
+            if (contains(facts, requirement))
                 actualKnownFacts++;
         }
         if (actualKnownFacts > knownFacts)
@@ -65,10 +108,61 @@ vector<int> lookForBestRule(int goal)
         }
     }
 
-    return matchedRules[bestIndex];
+    if (matchedRules.size() > 0)
+        return matchedRules[bestIndex];
+    return vector<int>{};
+}
+
+bool digTree(int goal)
+{
+    vector<int> requirements = lookForBestBackwardRule(goal);
+    vector<int> unknownRequirements = {};
+
+    //Meaning no rule for the goal was found, thus false, base case
+    if (requirements.size() == 0)
+        return false;
+
+    //Checking how many requirements do we know
+    unknownRequirements = getUnknownRequirements(requirements);
+
+    //If unknown requirements exists then digTree is called recursively again
+
+    if (unknownRequirements.size() > 0)
+    {
+        for (int subGoal : unknownRequirements)
+        {
+            digTree(subGoal);
+        }
+    }
+
+    //If there are not, then goal requirements are fulfilled and goal is added to the KB
+    if (getUnknownRequirements(requirements).size() == 0)
+    {
+        cout << "Rule: [";
+        coutArray(requirements);
+        cout << "]\t -> \t" << goal << "\n";
+        facts.push_back(goal);
+        return true;
+    }
+
+    return false;
+}
+
+bool forwardProcess(int goal)
+{
+    return false;   
 }
 
 int main()
 {
-    coutArray(lookForBestRule(6));
+    pair<vector<int>, int> best = lookForBestForwardRule(7);
+    cout << "Rule: [";
+    coutArray(best.first);
+    cout << "]\t";
+    cout << best.second;
+
+    /*
+    cout << digTree(2) << "\n";
+    coutArray(facts);
+    */
 }
