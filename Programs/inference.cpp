@@ -56,6 +56,27 @@ vector<int> getUnknownRequirements(vector<int> requirements)
     return unknownRequirements;
 }
 
+vector<int> stringToFacts(string s)
+{
+    vector<int> facts;
+    string subMember = "";
+    for (char x : s)
+    {
+        if (x == ' ')
+        {
+            facts.push_back(stoi(subMember));
+            subMember = "";
+        }
+        else
+        {
+            subMember += x;
+        }
+    }
+
+    facts.push_back(stoi(subMember));
+    return facts;
+}
+
 //Main functions
 
 //Backward reasoning section, fully functional
@@ -211,26 +232,7 @@ bool applyForwardSolving(int goal)
     return false;
 }
 
-vector<int> stringToFacts(string s)
-{
-    vector<int> facts;
-    string subMember = "";
-    for (char x : s)
-    {
-        if (x == ' ')
-        {
-            facts.push_back(stoi(subMember));
-            subMember = "";
-        }
-        else
-        {
-            subMember += x;
-        }
-    }
 
-    facts.push_back(stoi(subMember));
-    return facts;
-}
 
 int main()
 {
